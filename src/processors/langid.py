@@ -3,6 +3,7 @@ import string
 from ftlangdetect import detect
 from tqdm import tqdm
 
+from src import CONFIG
 from src.argilla_client import get_alpaca_es_client, load_dataset_from_argilla
 
 
@@ -85,7 +86,8 @@ def process_langid_metadata(flag_threshold: str = 0.5) -> None:
         samples_to_append.append(sample)
     print(f"Amount of flags: {amount_of_flags}")
     alpaca_client.log(samples_to_append, "somos-alpaca-es")
-    # Todo: Push to hub
+    ds = alpaca_client.DatasetForTextClassification(records=samples_to_append).to_datasets()
+    ds.push_to_hub(CONFIG["HUB_DATASET_NAME"], token=CONFIG["HF_TOKEN"])
 
 
 if __name__ == '__main__':
