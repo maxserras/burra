@@ -86,21 +86,21 @@ def argilla_dataset_generator(
     TextClassificationRecord
 
     """
-    limit = 1
-    initial_batch = rg_agent.load(dataset_name, limit=limit, query=query)
+    limit = 1000
+    initial_batch = list(rg_agent.load(dataset_name, limit=limit, query=query))
+    last_id = initial_batch[-1].id
     logger.debug(f"[RB] Loaded the initial batch of {limit} from {dataset_name}.")
     while initial_batch:
-        yield initial_batch[0]
-        initial_batch = rg_agent.load(
-            dataset_name, limit=limit, query=query, id_from=initial_batch[-1].id
-        )
-        logger.debug(f"[RB] Loaded a batch of {len(initial_batch)} from {dataset_name}.")
+        next_item = initial_batch.pop(0)
+        yield next_item
+        if not initial_batch:
+            initial_batch = list(rg_agent.load(
+                dataset_name, limit=limit, query=query, id_from=last_id
+            ))
+            logger.debug(f"[RB] Loaded a batch of {len(initial_batch)} from {dataset_name}.")
+            if initial_batch:
+                last_id = initial_batch[-1].id
     logger.success(
         f"[RB]A total of {len(initial_batch)} samples loaded from {dataset_name}! Casting them to"
         " Sample."
     )
-
-
-if __name__ == "__main__":
-    client = get_alpaca_es_client()
-    print(client.load("somos-alpaca-es", limit=1)[0])
