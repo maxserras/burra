@@ -3,8 +3,8 @@ import string
 from ftlangdetect import detect
 from tqdm import tqdm
 
-from src import CONFIG
-from src.argilla_client import get_alpaca_es_client, load_dataset_from_argilla
+from src import CONFIG, logger
+from src.argilla_client import get_alpaca_es_client, argilla_dataset_generator
 
 
 def __remove_numbers_from_string(text: str) -> str:
@@ -53,7 +53,13 @@ def _is_text_exception(text: str, min_tokens: int = 4) -> bool:
     cleaned_text = __remove_numbers_from_string(text.strip())
     cleaned_text = __remove_punctuation_from_string(cleaned_text)
     is_short = len(cleaned_text.split()) < min_tokens
-    return not (is_code or is_short)
+    if is_code:
+        return True
+    if is_short:
+        return True
+    if cleaned_text.strip() == "":
+        return True
+    return False
 
 
 def process_langid_metadata(flag_threshold: str = 0.5) -> None:
@@ -69,25 +75,34 @@ def process_langid_metadata(flag_threshold: str = 0.5) -> None:
 
     """
     alpaca_client = get_alpaca_es_client()
-    alpaca_dataset = load_dataset_from_argilla(alpaca_client, dataset_name="somos-alpaca-es")
     samples_to_append = []
     amount_of_flags = 0
-    for sample in tqdm(alpaca_dataset):
+    for sample in tqdm(argilla_dataset_generator(alpaca_client, dataset_name="somos-alpaca-es", query=None)):
         sample_metadata = {}
         for key, value in sample.inputs.items():
             if not _is_text_exception(value):
                 detect_result = detect(text=value.replace('\n', " "))
-                sample_metadata[f"{key}-{detect_result['lang']}"] = detect_result["score"]
                 if detect_result["lang"] != "es" and detect_result["score"] > flag_threshold:
-                    sample_metadata[f"translation-flag-{key}"] = True
+                    sample_metadata[f"tr-flag-{key}"] = True
                     amount_of_flags += 1
 
         sample.metadata = sample_metadata
+        if sample.metadata:
+            logger.debug(f"Sample text: {sample.inputs}")
+            logger.debug(f"Sample metadata: {sample.metadata}")
         samples_to_append.append(sample)
-    print(f"Amount of flags: {amount_of_flags}")
-    alpaca_client.log(samples_to_append, "somos-alpaca-es")
-    ds = alpaca_client.DatasetForTextClassification(records=samples_to_append).to_datasets()
-    ds.push_to_hub(CONFIG["HUB_DATASET_NAME"], token=CONFIG["HF_TOKEN"])
+        if len(samples_to_append) > 250:
+            print(f"Amount of flags: {amount_of_flags}")
+            alpaca_client.log(samples_to_append, "somos-alpaca-es-langid-processed")
+            ds = alpaca_client.DatasetForTextClassification(records=samples_to_append).to_datasets()
+            ds.push_to_hub(CONFIG["HUB_DATASET_NAME"], token=CONFIG["HF_TOKEN"])
+            samples_to_append = []
+    if samples_to_append:
+        print(f"Amount of flags: {amount_of_flags}")
+        alpaca_client.log(samples_to_append, "somos-alpaca-es-langid-processed")
+        ds = alpaca_client.DatasetForTextClassification(records=samples_to_append).to_datasets()
+        ds.push_to_hub(CONFIG["HUB_DATASET_NAME"], token=CONFIG["HF_TOKEN"])
+
 
 
 if __name__ == '__main__':
