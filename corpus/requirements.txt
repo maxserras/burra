@@ -1,0 +1,11 @@
+# Python 3.7
+mosestokenizer
+tqdm
+numpy
+torch
+cython
+fairseq
+transliterate
+tabulate
+pandas
+faiss-gpu
