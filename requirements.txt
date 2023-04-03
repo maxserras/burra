@@ -3,3 +3,8 @@ loguru~=0.6.0
 fasttext-langdetect
 tqdm~=4.65.0
 datasets>=1.17.0
+transformers>=4.27.4
+torch
+torchvision
+torchaudio
+sentence_transformers
