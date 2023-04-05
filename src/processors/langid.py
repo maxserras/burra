@@ -102,8 +102,3 @@ def process_langid_metadata(flag_threshold: str = 0.5) -> None:
         alpaca_client.log(samples_to_append, "somos-alpaca-es-langid-processed")
         ds = alpaca_client.DatasetForTextClassification(records=samples_to_append).to_datasets()
         ds.push_to_hub(CONFIG["HUB_DATASET_NAME"], token=CONFIG["HF_TOKEN"])
-
-
-
-if __name__ == '__main__':
-    process_langid_metadata()
