@@ -86,7 +86,7 @@ def argilla_dataset_generator(
     TextClassificationRecord
 
     """
-    limit = 1000
+    limit = 2000
     initial_batch = list(rg_agent.load(dataset_name, limit=limit, query=query))
     last_id = initial_batch[-1].id
     logger.debug(f"[RB] Loaded the initial batch of {limit} from {dataset_name}.")
