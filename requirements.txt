@@ -8,3 +8,5 @@ torch
 torchvision
 torchaudio
 sentence_transformers
+numpy~=1.23.5
+setfit~=0.6.0
