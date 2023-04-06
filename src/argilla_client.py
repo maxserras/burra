@@ -70,7 +70,7 @@ def load_dataset_from_argilla(
 
 
 def argilla_dataset_generator(
-    rg_agent, dataset_name: str, query: str | None
+    rg_agent, dataset_name: str, query: Optional[str] = None
 ) -> Generator[rg.TextClassificationRecord, None, None]:
     """
     Generator that yields a dataset from Argilla. The search can be filtered using an ElasticSearch query
