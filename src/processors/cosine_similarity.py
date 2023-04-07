@@ -1,4 +1,3 @@
-from src import CONFIG, logger
 from src.argilla_client import get_alpaca_es_client, argilla_dataset_generator
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer
@@ -26,7 +25,7 @@ def __cosine_similarity(text1: str, text2: str) -> float:
     return cosine_similarity
 
 
-def get_cosine_similarity(text: str) -> (float):
+def get_cosine_similarity(text: str) -> float:
     """
     Given a sentence from the translated corpus, get the original text from the Alpaca corpus.
     Parameters
@@ -35,7 +34,7 @@ def get_cosine_similarity(text: str) -> (float):
 
     Returns
     -------
-    str - original text of the sentence
+    float - cosine similarity between the translated text and the original text
     """
 
     # Remove tabs and return characters from the text:
@@ -59,7 +58,6 @@ def get_cosine_similarity(text: str) -> (float):
                 original = original_text
                 break
 
-    
     if original is None:
         return 0.0
     
