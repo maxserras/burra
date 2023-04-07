@@ -3,12 +3,15 @@ import json
 import os
 
 from tqdm import tqdm
+from argilla import TextClassificationRecord
 
 from src import logger, CONFIG, CORPUS_DIR
 
 from src.argilla_client import get_alpaca_es_client, argilla_dataset_generator
 from setfit import SetFitTrainer, SetFitModel
 from sentence_transformers.losses import CosineSimilarityLoss
+
+from src.queries import merge_queries, TAGGED_ITEMS, AVOID_TRANSLATION_FLAGGED, AVOID_TRANSLATION_ERRORS
 
 
 def transform(r):
@@ -18,10 +21,21 @@ def transform(r):
     }
 
 
+def instruct_fields_to_text(field_instruction: str, field_input: str, field_output: str):
+    """Given the instruction, input and output fields, return a text to be used by setfit"""
+    return f"INSTRUCTION:\n{field_instruction}\nINPUT:\n{field_input}\nOUTPUT:\n{field_output}\n"
+
+
+def sample_to_text(sample: TextClassificationRecord) -> str:
+    """Converts and Argilla TextClassificationRecord to a text to be used by setfit"""
+    return instruct_fields_to_text(sample.inputs["1-instruction"], sample.inputs["2-input"], sample.inputs["3-output"])
+
+
 def train_unprocessable_samples_setfit(test_mode: bool = False):
     argilla_client = get_alpaca_es_client()
+    unprocessable_query = merge_queries(TAGGED_ITEMS, AVOID_TRANSLATION_FLAGGED, AVOID_TRANSLATION_ERRORS)
     labelled_samples = argilla_client.load("somos-alpaca-es",
-                                           query="status:Validated AND NOT annotated_by:same-instruction-auto",
+                                           query=unprocessable_query,
                                            limit=10_000)
     dataset = labelled_samples.to_datasets()
     dataset = dataset.map(transform)
@@ -42,8 +56,6 @@ def train_unprocessable_samples_setfit(test_mode: bool = False):
     setfit_model._save_pretrained("backup-model-setfit-unprocessable.pck")
     logger.info(f"Push to huggingface hub")
     trainer.push_to_hub("mserras/setfit-alpaca-es-unprocessable-sample-detection", use_auth_token=CONFIG["HF_TOKEN"])
-
-
 
 
 def predict_with_model(model_name: str = "mserras/setfit-alpaca-es-unprocessable-instructions",
@@ -70,7 +82,7 @@ def predict_with_model(model_name: str = "mserras/setfit-alpaca-es-unprocessable
     predicted_samples = []
     identifier_to_score_map = {}
     for sample in tqdm(argilla_dataset_generator(argilla_client, dataset_name="somos-alpaca-es", query=None)):
-        text = f"INSTRUCTION:\n{sample.inputs['1-instruction']}\nINPUT:\n{sample.inputs['2-input']}\nOUTPUT:\n{sample.inputs['3-output']}\n"
+        text = sample_to_text(sample)
         score = setfit_model.predict_proba([text])[0].tolist()[1]
         identifier_to_score_map[sample.id] = score
         sample.metadata[metadata_field_name] = score
@@ -90,5 +102,4 @@ def predict_with_model(model_name: str = "mserras/setfit-alpaca-es-unprocessable
     # Save the predictions in a json file
     with open(os.path.join(CORPUS_DIR, "setfit_unprocessable_scores.json"), "w") as f:
         json.dump(identifier_to_score_map, f)
-    
 

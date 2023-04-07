@@ -15,21 +15,6 @@ def get_alpaca_es_client():
     return rg
 
 
-def get_alpaca_en_client():
-    """get the alpaca-en dataset from argilla"""
-    import argilla as rg
-
-    rg.init(
-        api_key="team.apikey", api_url="https://mserras-somos-alpaca-en.hf.space", workspace="team"
-    )
-    return rg
-
-
-def get_prompt_client():
-    # Todo.
-    pass
-
-
 def load_dataset_from_argilla(
     rg_agent, dataset_name: str, limit: int = -1, query: Optional[str] = None
 ) -> List[rg.TextClassificationRecord]:
