@@ -11,6 +11,11 @@ if __name__ == '__main__':
     # If the command is "predict-unprocessable-setfit" predict it
     elif sys.argv[1] == "predict-unprocessable-setfit":
         from src.processors.setfit_algorithm import predict_with_model
-        import time
-        time.sleep(1800)
         predict_with_model(test_mode=False, model_name="mserras/setfit-alpaca-es-unprocessable-sample-detection")
+    elif sys.argv[1] == "save":
+        from src.etl.sync_metadata import save_progress
+        save_progress()
+    # Alignment between EN and ES datasets
+    elif sys.argv[1] == "align":
+        from src.etl.load_alpaca_en_original import align_datasets
+        align_datasets()
