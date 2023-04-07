@@ -37,7 +37,6 @@ def align_datasets():
 		text = text.replace('\t', ' ').replace('\r', ' ').replace('\n', ' ')
 		english_text_to_index_map[text] = en_index
 
-	argilla_client = get_alpaca_es_client()
 	alignment_map = {}
 	# Find each text in the given dataset
 	for spanish_text, english_text in alignment:
