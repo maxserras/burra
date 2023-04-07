@@ -1,9 +1,10 @@
 import argilla as rg
 
 from datasets import load_dataset
+from tqdm import tqdm
 
 from src import logger, CONFIG
-from src.argilla_client import get_alpaca_es_client
+from src.argilla_client import get_alpaca_es_client, argilla_dataset_generator
 
 
 def sync_metadata_info():
@@ -27,3 +28,13 @@ def sync_metadata_info():
 	dataset = records.to_datasets()
 	# Push the dataset to the hub
 	dataset.push_to_hub("DATASET_NAME_PLACEHOLDER", token=CONFIG["HF_TOKEN"])
+
+
+def save_progress():
+	"""Save the progress achieve so far in the alpaca-es-hackaton dataset """
+	argilla_client = get_alpaca_es_client()
+	samples = []
+	for sample in tqdm(argilla_dataset_generator(argilla_client, dataset_name="somos-alpaca-es", query=None)):
+		samples.append(sample)
+	dataset = rg.DatasetForTextClassification(records=samples).to_datasets()
+	dataset.push_to_hub(CONFIG["HUB_DATASET_NAME"], token=CONFIG["HF_TOKEN"])
