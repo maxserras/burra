@@ -8,6 +8,14 @@ if __name__ == '__main__':
         logger.info("Training unprocessable samples setfit model")
         from src.processors.setfit_algorithm import train_unprocessable_samples_setfit
         train_unprocessable_samples_setfit(test_mode=False)
+
+    elif sys.argv[1] == "train-predict-setfit":
+        logger.info("Training unprocessable samples setfit model")
+        from src.processors.setfit_algorithm import train_unprocessable_samples_setfit
+        train_unprocessable_samples_setfit(test_mode=False)
+        from src.processors.setfit_algorithm import predict_with_model
+        predict_with_model(test_mode=False, model_name="mserras/setfit-alpaca-es-unprocessable-sample-detection")
+
     # If the command is "predict-unprocessable-setfit" predict it
     elif sys.argv[1] == "predict-unprocessable-setfit":
         from src.processors.setfit_algorithm import predict_with_model
