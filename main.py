@@ -27,3 +27,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == "align":
         from src.etl.load_alpaca_en_original import align_datasets
         align_datasets()
+
+    elif sys.argv[1] == "enrich":
+        from src.processors.enrich_metadata import enrich_metadata_with_model
+        enrich_metadata_with_model()
