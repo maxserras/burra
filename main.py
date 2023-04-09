@@ -14,7 +14,7 @@ if __name__ == '__main__':
         from src.processors.setfit_algorithm import train_unprocessable_samples_setfit
         train_unprocessable_samples_setfit(test_mode=False)
         from src.processors.setfit_algorithm import predict_with_model
-        predict_with_model(test_mode=False, model_name="mserras/setfit-alpaca-es-unprocessable-sample-detection")
+        predict_with_model(test_mode=False, model_name="backup-model-setfit-unprocessable")
 
     # If the command is "predict-unprocessable-setfit" predict it
     elif sys.argv[1] == "predict-unprocessable-setfit":

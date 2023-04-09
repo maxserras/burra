@@ -53,9 +53,12 @@ def train_unprocessable_samples_setfit(test_mode: bool = False):
     logger.info(f"Training setfit model on training dataset...")
     trainer.train()
     logger.warning("Saving locally")
-    setfit_model._save_pretrained("backup-model-setfit-unprocessable.pck")
-    logger.info(f"Push to huggingface hub")
-    trainer.push_to_hub("mserras/setfit-alpaca-es-unprocessable-sample-detection", use_auth_token=CONFIG["HF_TOKEN"])
+    setfit_model._save_pretrained("backup-model-setfit-unprocessable")
+    try:
+        logger.info(f"Push to huggingface hub")
+        trainer.push_to_hub("mserras/setfit-alpaca-es-unprocessable-sample-detection", use_auth_token=CONFIG["HF_TOKEN"])
+    except:
+        logger.warning("Push to hub failed")
 
 
 def predict_with_model(model_name: str = "mserras/setfit-alpaca-es-unprocessable-instructions",
